@@ -10,6 +10,17 @@ declare global {
 
 const MOBILE_SURFACE_MAX_WIDTH = 768;
 
+export const isEmbeddedSessionChatRoute = (search?: string): boolean => {
+  try {
+    const value = typeof search === 'string'
+      ? search
+      : (typeof window !== 'undefined' ? window.location.search : '');
+    return new URLSearchParams(value).get('ocPanel') === 'session-chat';
+  } catch {
+    return false;
+  }
+};
+
 const isTouchOrCoarsePointer = (): boolean => {
   if (typeof window === 'undefined') return false;
 
@@ -22,6 +33,13 @@ const isTouchOrCoarsePointer = (): boolean => {
 
 export const detectHostedSurface = (): HostedSurface => {
   if (typeof window === 'undefined') return 'desktop';
+
+  // Embedded session-chat iframes can be narrow side panels on desktop.
+  // Force the desktop surface even if the bootstrap script or pointer heuristics
+  // would otherwise classify the viewport as mobile.
+  if (isEmbeddedSessionChatRoute(window.location.search)) {
+    return 'desktop';
+  }
 
   const explicitSurface = window.__OPENCHAMBER_SURFACE__;
   if (explicitSurface === 'mobile' || explicitSurface === 'desktop') {

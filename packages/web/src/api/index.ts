@@ -5,6 +5,7 @@ import {
   setRuntimeUrlResolver,
   type RuntimeUrlResolver,
 } from '@openchamber/ui/lib/runtime-url';
+import { isDesktopShell } from '@openchamber/ui/lib/desktop';
 import { createWebTerminalAPI } from './terminal';
 import { createWebGitAPI } from './git';
 import { createWebFilesAPI } from './files';
@@ -34,9 +35,15 @@ export const createWebAPIs = (options: WebAPIsOptions = {}): RuntimeAPIs => {
   const urls = options.urls ?? createRuntimeUrlResolver();
   setRuntimeUrlResolver(urls);
   const activeUrls = createActiveRuntimeUrlResolver();
+  const desktopRuntime = isDesktopShell();
 
   return {
-  runtime: { platform: 'web', isDesktop: false, isVSCode: false, label: 'web' },
+  runtime: {
+    platform: desktopRuntime ? 'desktop' : 'web',
+    isDesktop: desktopRuntime,
+    isVSCode: false,
+    label: desktopRuntime ? 'desktop' : 'web',
+  },
   terminal: createWebTerminalAPI(),
   git: createWebGitAPI(),
   files: createWebFilesAPI({ urls: activeUrls }),

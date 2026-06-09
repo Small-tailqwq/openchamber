@@ -1096,6 +1096,25 @@ const KNOWN_FILE_BASENAMES = new Set([
   '.gitignore',
   '.npmrc',
 ]);
+
+const COMMON_EXTENSIONS = new Set([
+  'py', 'js', 'ts', 'tsx', 'jsx', 'mjs', 'cjs',
+  'json', 'yaml', 'yml', 'toml', 'xml', 'csv',
+  'md', 'txt', 'html', 'css', 'scss', 'less',
+  'go', 'rs', 'java', 'kt', 'swift',
+  'c', 'cpp', 'h', 'hpp',
+  'sh', 'ps1', 'bat', 'exe',
+  'svg', 'png', 'jpg', 'jpeg', 'gif', 'ico', 'webp',
+  'vue', 'svelte',
+  'sql',
+  'log', 'lock',
+  'cfg', 'conf', 'ini',
+  'env', 'gitignore',
+  'mod', 'sum',
+  'gradle',
+  'patch', 'diff',
+]);
+
 const KNOWN_BASENAME_PATTERN = Array.from(KNOWN_FILE_BASENAMES)
   .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   .join('|');
@@ -1233,6 +1252,10 @@ const isLikelyFilePathValue = (path: string): boolean => {
     return false;
   }
 
+  if (path.includes('=')) {
+    return false;
+  }
+
   const normalized = normalizePath(path);
   const baseName = normalized.split('/').filter(Boolean).pop() ?? normalized;
   if (!baseName || baseName === '.' || baseName === '..') {
@@ -1242,6 +1265,13 @@ const isLikelyFilePathValue = (path: string): boolean => {
   const base = baseName.toLowerCase();
   if (KNOWN_FILE_BASENAMES.has(base) || (base.startsWith('.') && base.length > 1)) {
     return true;
+  }
+
+  if (!normalized.includes('/') && !normalized.includes('\\')) {
+    const extMatch = base.match(/\.([a-z0-9_-]+)$/);
+    if (!extMatch || !COMMON_EXTENSIONS.has(extMatch[1])) {
+      return false;
+    }
   }
 
   return hasFileExtension(normalized);

@@ -31,7 +31,7 @@ import { useProjectsStore } from '@/stores/useProjectsStore';
 import { TextSelectionMenu } from './TextSelectionMenu';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { useChatSurfaceMode } from '@/components/chat/useChatSurfaceMode';
-import { isVSCodeRuntime } from '@/lib/desktop';
+import { isDesktopShell, isVSCodeRuntime } from '@/lib/desktop';
 import { useRuntimeAPIs } from '@/hooks/useRuntimeAPIs';
 import { toPng } from 'html-to-image';
 import { toast } from '@/components/ui';
@@ -201,7 +201,7 @@ const UserSubtaskPart: React.FC<{ part: SubtaskPartLike }> = ({ part }) => {
                         className="typography-meta text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
                         onClick={() => {
                             if (!effectiveDirectory) return;
-                            if (isMobile || isVSCodeRuntime()) {
+                            if (isMobile || isVSCodeRuntime() || isDesktopShell()) {
                                 setCurrentSession(taskSessionID, effectiveDirectory);
                                 return;
                             }

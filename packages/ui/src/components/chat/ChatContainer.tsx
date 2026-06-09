@@ -596,10 +596,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ autoOpenDraft = tr
     const promptReadOnly = readOnly || Boolean(parentSession);
 
     React.useEffect(() => {
-        if (autoOpenDraft && !currentSessionId && !draftOpen) {
+        if (autoOpenDraft && !currentSessionId && !draftOpen && !readOnly) {
             openNewSessionDraft();
         }
-    }, [autoOpenDraft, currentSessionId, draftOpen, openNewSessionDraft]);
+    }, [autoOpenDraft, currentSessionId, draftOpen, openNewSessionDraft, readOnly]);
 
     const activeTurnChangeRef = React.useRef<(turnId: string | null) => void>(() => {});
     const handleActiveTurnChange = React.useCallback((turnId: string | null) => {

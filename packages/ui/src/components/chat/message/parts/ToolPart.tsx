@@ -1223,7 +1223,7 @@ const TaskToolSummary: React.FC<{
     const handleOpenSession = (event: React.MouseEvent) => {
         event.stopPropagation();
         if (sessionId && currentDirectory) {
-            if (isMobile || runtime?.runtime.isVSCode) {
+            if (isMobile || runtime?.runtime.isVSCode || runtime?.runtime.isDesktop) {
                 setCurrentSession(sessionId, currentDirectory);
                 return;
             }

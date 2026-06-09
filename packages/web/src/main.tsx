@@ -3,7 +3,7 @@ import { registerSW } from 'virtual:pwa-register';
 
 import type { RuntimeAPIs } from '@openchamber/ui/lib/api/types';
 import { getStoredMobileLayoutPreference } from '@openchamber/ui/lib/mobileLayoutPreference';
-import type { HostedSurface } from '@openchamber/ui/lib/runtimeSurface';
+import { isEmbeddedSessionChatRoute, type HostedSurface } from '@openchamber/ui/lib/runtimeSurface';
 import '@openchamber/ui/index.css';
 import '@openchamber/ui/styles/fonts';
 
@@ -26,6 +26,7 @@ const isCoarsePointer = (): boolean => {
 
 const detectHostedSurface = (): HostedSurface => {
   const params = new URLSearchParams(window.location.search);
+  if (isEmbeddedSessionChatRoute(window.location.search)) return 'desktop';
   const override = params.get('surface');
   if (override === 'mobile') return 'mobile';
   if (override === 'desktop') return 'desktop';
