@@ -31,6 +31,7 @@ local-dev*
 *.njsproj
 *.sln
 *.sw?
+.opencode/config.json
 .opencode/plans/*
 .hive
 docs/personal/*
@@ -63,3 +64,13 @@ data/
 workspaces/
 *.pid
 .worktrees/
+
+# Agent configuration (we only use OpenCode)
+.claude/
+.cursor/
+.gemini/
+.kiro/
+.mcp.json
+CLAUDE.md
+GEMINI.md
+.github/copilot-instructions.md

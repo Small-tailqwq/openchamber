@@ -28,10 +28,11 @@ export function createGlobalUiEventBroadcaster({
     }
 
     if (hasSseClients) {
-      for (const res of sseClients) {
+      for (const res of Array.from(sseClients)) {
         try {
           writeSseEvent(res, payload);
         } catch {
+          sseClients.delete(res);
         }
       }
     }

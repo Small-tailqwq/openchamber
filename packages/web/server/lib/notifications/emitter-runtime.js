@@ -83,11 +83,11 @@ export const createNotificationEmitterRuntime = (dependencies) => {
       return;
     }
 
-    for (const res of clients) {
+    for (const res of Array.from(clients)) {
       try {
         writeSseEvent(res, syntheticPayload);
       } catch {
-        // ignore
+        clients.delete(res);
       }
     }
   };

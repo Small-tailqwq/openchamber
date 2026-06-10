@@ -169,10 +169,11 @@ export const createSessionRuntime = ({ writeSseEvent, getNotificationClients, br
       if (typeof broadcastEvent === 'function') {
         broadcastEvent(syntheticPayload);
       } else if (clients.size > 0) {
-        for (const res of clients) {
+        for (const res of Array.from(clients)) {
           try {
             writeSseEvent(res, syntheticPayload);
           } catch {
+            clients.delete(res);
           }
         }
       }
@@ -228,10 +229,11 @@ export const createSessionRuntime = ({ writeSseEvent, getNotificationClients, br
         broadcastEvent(syntheticPayload);
       } else {
         const clients = getNotificationClients();
-        for (const res of clients) {
+        for (const res of Array.from(clients)) {
           try {
             writeSseEvent(res, syntheticPayload);
           } catch {
+            clients.delete(res);
           }
         }
       }
@@ -300,15 +302,21 @@ export const createSessionRuntime = ({ writeSseEvent, getNotificationClients, br
 
   const cleanupOldSessionStates = () => {
     const now = Date.now();
+    const staleSessionIds = new Set();
     for (const [sessionId, data] of sessionStates) {
       if (now - data.lastUpdateAt > SESSION_STATE_MAX_AGE_MS) {
+        staleSessionIds.add(sessionId);
         sessionStates.delete(sessionId);
       }
     }
     for (const [sessionId, state] of sessionAttentionStates) {
       if (now - state.lastStatusChangeAt > SESSION_ATTENTION_MAX_AGE_MS) {
+        staleSessionIds.add(sessionId);
         sessionAttentionStates.delete(sessionId);
       }
+    }
+    for (const sessionId of staleSessionIds) {
+      sessionActivityPhases.delete(sessionId);
     }
   };
 
@@ -338,6 +346,9 @@ export const createSessionRuntime = ({ writeSseEvent, getNotificationClients, br
       clearTimeout(timer);
     }
     sessionActivityCooldowns.clear();
+    sessionActivityPhases.clear();
+    sessionStates.clear();
+    sessionAttentionStates.clear();
   };
 
   return {

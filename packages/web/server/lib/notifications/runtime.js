@@ -25,6 +25,8 @@ export const createNotificationTriggerRuntime = (deps) => {
   const PUSH_READY_COOLDOWN_MS = 5000;
   const PUSH_QUESTION_DEBOUNCE_MS = 500;
   const PUSH_PERMISSION_DEBOUNCE_MS = 500;
+  const PRUNE_INTERVAL_MS = 30 * 60 * 1000;
+  const LAST_READY_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const pushQuestionDebounceTimers = new Map();
   const pushPermissionDebounceTimers = new Map();
   const notifiedPermissionRequests = new Set();
@@ -574,9 +576,50 @@ export const createNotificationTriggerRuntime = (deps) => {
     }
   };
 
+  const pruneStaleData = () => {
+    const now = Date.now();
+    for (const [sessionId, lastAt] of lastReadyNotificationAt) {
+      if (now - lastAt > LAST_READY_MAX_AGE_MS) {
+        lastReadyNotificationAt.delete(sessionId);
+      }
+    }
+    for (const [sessionId, entry] of sessionParentIdCache) {
+      if (now - entry.at > SESSION_PARENT_CACHE_TTL_MS * 2) {
+        sessionParentIdCache.delete(sessionId);
+      }
+    }
+    if (notifiedPermissionRequests.size > 1000) {
+      const entries = Array.from(notifiedPermissionRequests);
+      const keepCount = Math.max(500, entries.length - 500);
+      const toRemove = entries.slice(0, entries.length - keepCount);
+      for (const entry of toRemove) {
+        notifiedPermissionRequests.delete(entry);
+      }
+    }
+  };
+
+  const pruneInterval = setInterval(pruneStaleData, PRUNE_INTERVAL_MS);
+
+  const dispose = () => {
+    clearInterval(pruneInterval);
+    for (const timer of pushQuestionDebounceTimers.values()) {
+      clearTimeout(timer);
+    }
+    pushQuestionDebounceTimers.clear();
+    for (const entry of pushPermissionDebounceTimers.values()) {
+      clearTimeout(entry.timer);
+    }
+    pushPermissionDebounceTimers.clear();
+    notifiedPermissionRequests.clear();
+    lastReadyNotificationAt.clear();
+    sessionParentIdCache.clear();
+    autoAcceptingSessions.clear();
+  };
+
   return {
     maybeSendPushForTrigger,
     setAutoAcceptSession,
     setGetIsWindowFocused,
+    dispose,
   };
 };

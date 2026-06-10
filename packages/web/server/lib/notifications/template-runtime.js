@@ -10,6 +10,9 @@ export const createNotificationTemplateRuntime = (deps) => {
 
   const NOTIFICATION_BODY_MAX_CHARS = 1000;
   const SESSION_INFO_CACHE_TTL_MS = 60 * 1000;
+  const CACHE_CLEANUP_INTERVAL_MS = 30 * 60 * 1000;
+  const SESSION_TITLE_CACHE_MAX_SIZE = 500;
+  const SESSION_INFO_CACHE_MAX_SIZE = 1000;
 
   const cachedZenModels = { models: [] };
 
@@ -170,6 +173,12 @@ export const createNotificationTemplateRuntime = (deps) => {
 
   const cacheSessionTitle = (sessionId, title) => {
     if (typeof sessionId === 'string' && sessionId.length > 0 && typeof title === 'string' && title.length > 0) {
+      if (sessionTitleCache.size >= SESSION_TITLE_CACHE_MAX_SIZE && !sessionTitleCache.has(sessionId)) {
+        const oldestKey = sessionTitleCache.keys().next().value;
+        if (oldestKey !== undefined) {
+          sessionTitleCache.delete(oldestKey);
+        }
+      }
       sessionTitleCache.set(sessionId, title);
     }
   };
@@ -208,6 +217,12 @@ export const createNotificationTemplateRuntime = (deps) => {
       }
       const data = await response.json().catch(() => null);
       if (data && typeof data === 'object') {
+        if (sessionInfoCache.size >= SESSION_INFO_CACHE_MAX_SIZE && !sessionInfoCache.has(sessionId)) {
+          const oldestKey = sessionInfoCache.keys().next().value;
+          if (oldestKey !== undefined) {
+            sessionInfoCache.delete(oldestKey);
+          }
+        }
         sessionInfoCache.set(sessionId, { data, at: Date.now() });
         return data;
       }
@@ -328,6 +343,23 @@ export const createNotificationTemplateRuntime = (deps) => {
     };
   };
 
+  const cleanupCaches = () => {
+    const now = Date.now();
+    for (const [key, entry] of sessionInfoCache) {
+      if (now - entry.at > SESSION_INFO_CACHE_TTL_MS * 2) {
+        sessionInfoCache.delete(key);
+      }
+    }
+  };
+
+  const cleanupInterval = setInterval(cleanupCaches, CACHE_CLEANUP_INTERVAL_MS);
+
+  const dispose = () => {
+    clearInterval(cleanupInterval);
+    sessionTitleCache.clear();
+    sessionInfoCache.clear();
+  };
+
   const getCachedZenModels = () => cachedZenModels;
 
   return {
@@ -345,5 +377,6 @@ export const createNotificationTemplateRuntime = (deps) => {
     maybeCacheSessionInfoFromEvent,
     buildTemplateVariables,
     getCachedZenModels,
+    dispose,
   };
 };

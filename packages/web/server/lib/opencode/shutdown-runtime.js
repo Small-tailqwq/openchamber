@@ -27,6 +27,8 @@ export const createGracefulShutdownRuntime = (dependencies) => {
     getActiveTunnelController,
     setActiveTunnelController,
     tunnelAuthController,
+    notificationTemplateRuntime,
+    notificationTriggerRuntime,
   } = dependencies;
 
   let shutdownPromise = null;
@@ -42,6 +44,8 @@ export const createGracefulShutdownRuntime = (dependencies) => {
     openCodeWatcherRuntime.stop();
     sessionRuntime.dispose();
     scheduledTasksRuntime?.stop?.();
+    notificationTemplateRuntime?.dispose?.();
+    notificationTriggerRuntime?.dispose?.();
 
     const healthCheckInterval = getHealthCheckInterval();
     if (healthCheckInterval) {
